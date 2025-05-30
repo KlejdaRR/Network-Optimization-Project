@@ -2,10 +2,10 @@ import pandas as pd
 from gurobipy import Model, GRB, quicksum
 import matplotlib.pyplot as plt
 
-# Load dataset
+# Loading of dataset
 df = pd.read_csv("Dataset - Admission_Predict.csv")
 
-# Plot distributions (optional)
+# Plot distributions
 plt.figure(figsize=(10, 5))
 plt.subplot(1, 2, 1)
 plt.hist(df['Interest'], bins=20)
@@ -16,11 +16,11 @@ plt.hist(df['CGPA'], bins=20)
 plt.title('CGPA Distribution')
 plt.show()
 
-# Prepare data
+# Preparation of data
 students = [f"s{id}" for id in df['Student ID']]
 courses = [f"c{uni}" for uni in df['University Course'].unique()]
 
-# Create dictionaries for interest and score
+# Creation of dictionaries for interest and score
 interest = {}
 score = {}
 for _, row in df.iterrows():
@@ -29,9 +29,6 @@ for _, row in df.iterrows():
 
     interest[(student_id, course_id)] = row['Interest']
     score[(student_id, course_id)] = row['CGPA']
-
-# Set course capacities
-capacity = {course: 20 for course in courses}
 
 # Initialization of the model
 model = Model("EnrollmentOptimization")
@@ -42,9 +39,17 @@ for (i, j), interest_val in interest.items():
     if interest_val >= 0.8 and score[(i, j)] >= 7:
         x[(i, j)] = model.addVar(vtype=GRB.BINARY, name=f"x_{i}_{j}")
 
-# Addition of capacity constraints per course
+# Course capacities constraint
+capacity = {course: 20 for course in courses}
+
+# Addition of capacity + eligibility constraints per course
 for j in courses:
-    model.addConstr(quicksum(x[(i, j)] for (i_, j_) in x if j_ == j) <= capacity[j], name=f"capacity_{j}")
+    model.addConstr(
+        quicksum(x[(i, j)] for (i, j_) in x if j_ == j and interest[(i, j_)] >= 0.8 and score[(i, j_)] >= 7)
+        <= capacity[j],
+        name=f"capacity_and_eligibility_{j}"
+    )
+
 
 # Objective function (weighted sum of interest and score)
 alpha = 0.5  # weight for interest
@@ -55,10 +60,10 @@ model.setObjective(
     GRB.MAXIMIZE
 )
 
-# Optimize
+# Optimization
 model.optimize()
 
-# Output results
+# Output of results
 if model.status == GRB.OPTIMAL:
     print("\nOptimal Enrollments:")
     total_interest = 0
