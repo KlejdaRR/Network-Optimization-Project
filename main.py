@@ -33,16 +33,16 @@ for _, row in df.iterrows():
 # Set course capacities
 capacity = {course: 20 for course in courses}
 
-# Initialize model
+# Initialization of the model
 model = Model("EnrollmentOptimization")
 
-# Create decision variables only for eligible student-course pairs
+# Creation of the decision variables only for eligible student-course pairs
 x = {}
 for (i, j), interest_val in interest.items():
     if interest_val >= 0.8 and score[(i, j)] >= 7:
         x[(i, j)] = model.addVar(vtype=GRB.BINARY, name=f"x_{i}_{j}")
 
-# Add capacity constraints per course
+# Addition of capacity constraints per course
 for j in courses:
     model.addConstr(quicksum(x[(i, j)] for (i_, j_) in x if j_ == j) <= capacity[j], name=f"capacity_{j}")
 
