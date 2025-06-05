@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 # Loading of dataset
 df = pd.read_csv("Dataset - Admission_Predict.csv")
 
-# Plot distributions
+# Plots of distributions
 plt.figure(figsize=(10, 5))
 plt.subplot(1, 2, 1)
 plt.hist(df['Interest'], bins=20)
@@ -81,5 +81,9 @@ if model.status == GRB.OPTIMAL:
     print(f"Total Interest: {total_interest:.2f}")
     print(f"Total Score: {total_score:.2f}")
     print(f"Combined Objective: {model.objVal:.2f}")
+    print(f"Execution time: {model.Runtime:.2f} seconds")
+    print(f"Total variables: {len(x)}")
+    print(f"Total constraints: {len(courses)}")
+
 else:
     print("No solution found.")
